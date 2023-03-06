@@ -9,6 +9,7 @@ import (
 	"github.com/FachengG/AAgun/pkgs/obj"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 var img *ebiten.Image
@@ -22,22 +23,33 @@ func init() {
 }
 
 type Game struct {
-	time   float64
-	wind   env.Wind
-	gun    obj.Gun
-	bullet obj.Bullet
+	frame   float64
+	wind    env.Wind
+	gun     obj.Gun
+	bullets []obj.Bullet
 }
 
 func (g *Game) Update() error {
-	g.bullet.UpdateSpeed(g.wind, g.time)
-	g.bullet.Movement(g.time)
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		fmt.Print("shot")
+		if g.gun.Shoot() {
+			g.bullets = append(g.bullets, obj.Bullet{}.New())
+		}
+	}
+	for _, b := range g.bullets {
+		b.UpdateSpeed(g.wind, g.frame)
+		b.Movement(g.frame)
+	}
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(g.bullet.Position.X, g.bullet.Position.Y)
-	screen.DrawImage(img, op)
+	for _, b := range g.bullets {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(b.Position.X, b.Position.Y)
+		screen.DrawImage(img, op)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -45,18 +57,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	g := &Game{}
-	g.time = float64(1) / 60
+	g := &Game{frame: float64(1) / 60,
+		wind: env.Wind{X: 0.01, Y: 0.01},
+		gun:  obj.Gun{BulletsNum: 99}}
 
-	g.wind = env.Wind{X: 0.01, Y: 0.01}
-	g.bullet = obj.Bullet{
-		Position:       obj.XY_Vector{X: 50, Y: 500},
-		Speed:          obj.XY_Vector{X: 50, Y: -100},
-		Mass:           float64(1),
-		Air_resistance: float64(0.01),
-		Time:           float64(100),
-	}
-	ebiten.SetWindowSize(600, 600)
 	ebiten.SetWindowTitle("bullet")
 	fmt.Print("start game")
 	if err := ebiten.RunGame(g); err != nil {
