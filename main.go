@@ -4,12 +4,12 @@ import (
 	"fmt"
 	_ "image/png"
 	"log"
+	"os"
 
 	env "github.com/FachengG/AAgun/pkgs/envirment"
 	"github.com/FachengG/AAgun/pkgs/obj"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 var img *ebiten.Image
@@ -30,16 +30,27 @@ type Game struct {
 }
 
 func (g *Game) Update() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		fmt.Print("shot")
+	if repeatingKeyPressed(ebiten.KeySpace) {
 		if g.gun.Shoot() {
-			g.bullets = append(g.bullets, obj.Bullet{}.New())
+			g.bullets = append(g.bullets, obj.NewBullet())
 		}
 	}
-	for _, b := range g.bullets {
+	if repeatingKeyPressed(ebiten.KeyLeft) {
+		if g.gun.Angle > 0 {
+			g.gun.Angle--
+		}
+	}
+	if repeatingKeyPressed(ebiten.KeyRight) {
+		if g.gun.Angle < 180 {
+			g.gun.Angle++
+		}
+	}
+	for i := range g.bullets {
+		b := &g.bullets[i]
 		b.UpdateSpeed(g.wind, g.frame)
 		b.Movement(g.frame)
 	}
+	fmt.Print(g.gun.Angle)
 
 	return nil
 }
@@ -53,17 +64,20 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 600, 600
+	return 1000, 1000
 }
 
 func main() {
+
 	g := &Game{frame: float64(1) / 60,
 		wind: env.Wind{X: 0.01, Y: 0.01},
-		gun:  obj.Gun{BulletsNum: 99}}
+		gun:  obj.Gun{BulletsNum: 99999999999, Angle: 90}}
 
 	ebiten.SetWindowTitle("bullet")
 	fmt.Print("start game")
 	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
+		f, _ := os.Create("err.log")
+		f.Write([]byte(err.Error()))
+		f.Close()
 	}
 }

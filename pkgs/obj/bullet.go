@@ -25,6 +25,9 @@ func (b *Bullet) Movement(grid float64) {
 	b.Lifetime = b.Lifetime - grid
 }
 
+func (b *Bullet) Rotate(grid float64) {
+}
+
 func (b Bullet) Boundary(upper_x float64, lower_x float64, upper_y float64, lower_y float64) bool {
 	return !(b.Position.X > upper_x || b.Position.X < lower_x || b.Position.Y > upper_y || b.Position.Y < lower_y)
 }
@@ -33,13 +36,13 @@ func (b Bullet) Explosition() bool {
 	return b.Lifetime <= float64(0)
 }
 
-func (b Bullet) New() Bullet {
-	bullet := Bullet{
-		Position:       XY_Vector{X: 50, Y: 500},
+func NewBullet() Bullet {
+	bullet := &Bullet{
+		Position:       XY_Vector{X: 0, Y: 600},
 		Speed:          XY_Vector{X: 50, Y: -100},
 		Mass:           float64(1),
 		Air_resistance: float64(0.01),
 		Lifetime:       float64(100),
 	}
-	return bullet
+	return *bullet
 }
